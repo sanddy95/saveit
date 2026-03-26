@@ -10,24 +10,20 @@ import {
   Kanban,
   LogOut,
   Bookmark,
+  FolderOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
-
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/todos", label: "Todos", icon: CheckSquare },
-  { href: "/links", label: "Links", icon: Link2 },
-  { href: "/boards", label: "Boards", icon: Kanban },
-];
+import { useWorkspaceContext } from "@/contexts/workspace-context";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const user = session?.user;
+  const { currentWorkspaceId } = useWorkspaceContext();
 
   const initials = user?.name
     ? user.name
@@ -36,6 +32,30 @@ export function Sidebar() {
         .join("")
         .toUpperCase()
     : "U";
+
+  const wsPrefix = currentWorkspaceId
+    ? `/workspaces/${currentWorkspaceId}`
+    : "";
+
+  const navItems = [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    {
+      href: wsPrefix ? `${wsPrefix}/todos` : "/todos",
+      label: "Todos",
+      icon: CheckSquare,
+    },
+    {
+      href: wsPrefix ? `${wsPrefix}/links` : "/links",
+      label: "Links",
+      icon: Link2,
+    },
+    {
+      href: wsPrefix ? `${wsPrefix}/boards` : "/boards",
+      label: "Boards",
+      icon: Kanban,
+    },
+    { href: "/workspaces", label: "Workspaces", icon: FolderOpen },
+  ];
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-card">
@@ -57,10 +77,11 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-3">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive =
+            pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
-              key={item.href}
+              key={item.label}
               href={item.href}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
