@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find D:/Projects/Claude-demos/personal -type f -name *.json -o -name *.md -o -name *.txt -o -name *.yaml -o -name *.yml -o -name *.config.*)",
+      "Bash(npm --version)",
+      "Bash(npx --version)",
+      "Bash(npx:*)",
+      "Bash(npm install:*)",
+      "Bash(npm view:*)"
+    ]
+  }
+}
