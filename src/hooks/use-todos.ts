@@ -9,6 +9,10 @@ export interface Todo {
   priority: string;
   dueDate: string | null;
   reminderAt: string | null;
+  url: string | null;
+  thumbnail: string | null;
+  siteName: string | null;
+  favicon: string | null;
   workspaceId: string;
   createdAt: string;
   updatedAt: string;
@@ -116,5 +120,19 @@ export function useDeleteTodo(workspaceId: string) {
       qc.invalidateQueries({ queryKey: ["todos", workspaceId] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
+  });
+}
+
+export interface DashboardStats {
+  totalTodosToday: number;
+  completedToday: number;
+  dueToday: number;
+  overdue: number;
+}
+
+export function useDashboardStats() {
+  return useQuery<DashboardStats>({
+    queryKey: ["dashboard", "stats"],
+    queryFn: () => fetchJson("/api/dashboard/stats"),
   });
 }
