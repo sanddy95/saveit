@@ -4,6 +4,11 @@ import { useEffect } from "react";
 
 export function ServiceWorkerRegistration() {
   useEffect(() => {
+    // Request notification permission for share target feedback
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")

@@ -1,4 +1,4 @@
-const CACHE_NAME = "saveit-v2";
+const CACHE_NAME = "saveit-v3";
 const SHARE_QUEUE = "share-queue-v1";
 
 const PRECACHE_URLS = ["/dashboard", "/login"];
@@ -89,31 +89,26 @@ async function handleShare(request) {
   const title = formData ? formData.get("title") || "" : "";
   const text = formData ? formData.get("text") || "" : "";
   const url = formData ? formData.get("url") || "" : "";
+  const displayUrl = url || text || title || "Link";
+
+  const params = new URLSearchParams();
+  if (title) params.set("title", title);
+  if (text) params.set("text", text);
+  if (url) params.set("url", url);
+
+  let saved = false;
 
   try {
     // Forward to server silently (don't follow redirects)
-    const params = new URLSearchParams();
-    if (title) params.set("title", title);
-    if (text) params.set("text", text);
-    if (url) params.set("url", url);
-
-    const response = await fetch("/api/share", {
+    await fetch("/api/share", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: params.toString(),
       redirect: "manual",
     });
-
-    // Show success notification
-    const displayUrl = url || text || title || "Link";
-    await self.registration.showNotification("SaveIt", {
-      body: `Saved: ${displayUrl.slice(0, 100)}`,
-      icon: "/icons/icon-192.png",
-      tag: "share-saved",
-      data: { url: "/dashboard" },
-    });
+    saved = true;
   } catch (err) {
-    // Offline — queue the share
+    // Offline — queue the share for later
     const shareData = { title, text, url, timestamp: Date.now() };
     const cache = await caches.open(SHARE_QUEUE);
     await cache.put(
@@ -124,18 +119,48 @@ async function handleShare(request) {
     if (self.registration.sync) {
       await self.registration.sync.register("share-sync");
     }
-
-    await self.registration.showNotification("SaveIt", {
-      body: "Link queued — will save when online",
-      icon: "/icons/icon-192.png",
-      tag: "share-queued",
-    });
   }
 
-  // Return a self-closing page instead of redirecting to dashboard
+  // Show notification (won't throw if permission denied, just silently fails)
+  try {
+    await self.registration.showNotification("SaveIt", {
+      body: saved
+        ? `Saved: ${displayUrl.slice(0, 100)}`
+        : "Link queued — will save when online",
+      icon: "/icons/icon-192.png",
+      tag: "share-result",
+      data: { url: "/dashboard" },
+    });
+  } catch {
+    // No notification permission — that's okay
+  }
+
+  // Return a brief confirmation page that auto-closes
+  const message = saved ? "Link saved!" : "Link queued for later.";
   return new Response(
-    `<!DOCTYPE html><html><head><title>Saved</title></head>
-     <body><script>window.close();</script></body></html>`,
+    `<!DOCTYPE html><html><head>
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <title>SaveIt</title>
+      <style>
+        body { font-family: system-ui; display: flex; align-items: center;
+               justify-content: center; height: 100vh; margin: 0;
+               background: #6366f1; color: white; }
+        .msg { text-align: center; }
+        h2 { margin: 0 0 8px; }
+        p { margin: 0; opacity: 0.8; font-size: 14px; }
+      </style>
+    </head>
+    <body>
+      <div class="msg">
+        <h2>${message}</h2>
+        <p>You can close this window.</p>
+      </div>
+      <script>
+        // Try to close, then navigate back after a brief delay
+        setTimeout(() => { window.close(); }, 1500);
+        setTimeout(() => { history.back(); }, 2000);
+      </script>
+    </body></html>`,
     { headers: { "Content-Type": "text/html" } }
   );
 }
