@@ -43,3 +43,60 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type WorkspaceInput = z.infer<typeof workspaceSchema>;
 export type TodoInput = z.infer<typeof todoSchema>;
 export type SavedLinkInput = z.infer<typeof savedLinkSchema>;
+
+export const boardSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+});
+
+export type BoardInput = z.infer<typeof boardSchema>;
+
+export const columnSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  color: z.string().max(7).optional(),
+  icon: z.string().max(50).optional(),
+});
+
+export type ColumnInput = z.infer<typeof columnSchema>;
+
+export const addCardSchema = z.discriminatedUnion("mode", [
+  z.object({
+    mode: z.literal("existing"),
+    columnId: z.string().min(1),
+    todoId: z.string().optional(),
+    savedLinkId: z.string().optional(),
+  }),
+  z.object({
+    mode: z.literal("new-todo"),
+    columnId: z.string().min(1),
+    title: z.string().min(1, "Title is required").max(200),
+    description: z.string().optional(),
+    priority: z.enum(["low", "medium", "high"]).default("medium"),
+    dueDate: z.string().optional(),
+  }),
+  z.object({
+    mode: z.literal("new-link"),
+    columnId: z.string().min(1),
+    url: z.string().url("Invalid URL"),
+    title: z.string().optional(),
+    description: z.string().optional(),
+  }),
+]);
+
+export type AddCardInput = z.infer<typeof addCardSchema>;
+
+export const reorderSchema = z.object({
+  columns: z
+    .array(z.object({ id: z.string(), position: z.number().int().min(0) }))
+    .optional(),
+  cards: z
+    .array(
+      z.object({
+        id: z.string(),
+        columnId: z.string(),
+        position: z.number().int().min(0),
+      })
+    )
+    .optional(),
+});
+
+export type ReorderInput = z.infer<typeof reorderSchema>;
