@@ -3,6 +3,22 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fetchUrlMetadata } from "@/lib/metadata";
 
+function getBaseUrl(req: NextRequest): string {
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL;
+  }
+  const forwardedHost = req.headers.get("x-forwarded-host");
+  const forwardedProto = req.headers.get("x-forwarded-proto") || "https";
+  if (forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+  const host = req.headers.get("host");
+  if (host) {
+    return `${forwardedProto}://${host}`;
+  }
+  return req.nextUrl.origin;
+}
+
 function extractUrl(title?: string, text?: string, url?: string): string | null {
   // Check the url param first
   if (url && isValidUrl(url)) return url;
@@ -57,11 +73,13 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  const baseUrl = getBaseUrl(req);
+
   // Not authenticated — redirect to login
   if (!session?.user?.id) {
     const params = new URLSearchParams({ title, text, url });
     return NextResponse.redirect(
-      new URL(`/login?returnUrl=/api/share?${params.toString()}`, req.url),
+      new URL(`/login?returnUrl=/api/share?${params.toString()}`, baseUrl),
       303
     );
   }
@@ -71,7 +89,7 @@ export async function POST(req: NextRequest) {
 
   if (!extractedUrl) {
     return NextResponse.redirect(
-      new URL("/dashboard?shared=error&reason=no-url", req.url),
+      new URL("/dashboard?shared=error&reason=no-url", baseUrl),
       303
     );
   }
@@ -85,7 +103,7 @@ export async function POST(req: NextRequest) {
 
   if (!membership) {
     return NextResponse.redirect(
-      new URL("/dashboard?shared=error&reason=no-workspace", req.url),
+      new URL("/dashboard?shared=error&reason=no-workspace", baseUrl),
       303
     );
   }
@@ -115,11 +133,12 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.redirect(new URL("/dashboard?shared=true", req.url), 303);
+  return NextResponse.redirect(new URL("/dashboard?shared=true", baseUrl), 303);
 }
 
 // Also handle GET for share target fallback (some browsers use GET)
 export async function GET(req: NextRequest) {
+  const baseUrl = getBaseUrl(req);
   const title = req.nextUrl.searchParams.get("title") || "";
   const text = req.nextUrl.searchParams.get("text") || "";
   const url = req.nextUrl.searchParams.get("url") || "";
@@ -127,7 +146,7 @@ export async function GET(req: NextRequest) {
   // Redirect to dashboard with share_pending params so the client can handle it
   const params = new URLSearchParams({ title, text, url });
   return NextResponse.redirect(
-    new URL(`/dashboard?share_pending=true&${params.toString()}`, req.url),
+    new URL(`/dashboard?share_pending=true&${params.toString()}`, baseUrl),
     303
   );
 }
