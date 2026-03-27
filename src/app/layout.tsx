@@ -22,6 +22,7 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "SaveIt",
   description: "Your personal productivity hub — todos, links, and boards",
+  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
