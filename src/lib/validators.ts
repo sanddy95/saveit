@@ -30,6 +30,10 @@ export const todoSchema = z.object({
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   dueDate: z.string().optional(),
   reminderAt: z.string().optional(),
+  url: z.string().url().optional().or(z.literal("")),
+  thumbnail: z.string().optional(),
+  siteName: z.string().optional(),
+  favicon: z.string().optional(),
 });
 
 export const savedLinkSchema = z.object({
@@ -72,6 +76,11 @@ export const addCardSchema = z.discriminatedUnion("mode", [
     description: z.string().optional(),
     priority: z.enum(["low", "medium", "high"]).default("medium"),
     dueDate: z.string().optional(),
+    reminderAt: z.string().optional(),
+    url: z.string().url().optional().or(z.literal("")),
+    thumbnail: z.string().optional(),
+    siteName: z.string().optional(),
+    favicon: z.string().optional(),
   }),
   z.object({
     mode: z.literal("new-link"),
