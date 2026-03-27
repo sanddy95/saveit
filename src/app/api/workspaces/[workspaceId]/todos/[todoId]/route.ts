@@ -45,7 +45,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
   }
 
   const body = await req.json();
-  const { title, description, completed, priority, dueDate, reminderAt } = body;
+  const { title, description, completed, priority, dueDate, reminderAt, url, thumbnail, siteName, favicon } = body;
 
   const data: Record<string, unknown> = {};
   if (title !== undefined) data.title = title;
@@ -54,6 +54,10 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
   if (priority !== undefined) data.priority = priority;
   if (dueDate !== undefined) data.dueDate = dueDate ? new Date(dueDate) : null;
   if (reminderAt !== undefined) data.reminderAt = reminderAt ? new Date(reminderAt) : null;
+  if (url !== undefined) data.url = url || null;
+  if (thumbnail !== undefined) data.thumbnail = thumbnail || null;
+  if (siteName !== undefined) data.siteName = siteName || null;
+  if (favicon !== undefined) data.favicon = favicon || null;
 
   const todo = await prisma.todoItem.update({
     where: { id: todoId, workspaceId },

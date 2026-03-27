@@ -69,13 +69,14 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     );
   }
 
-  const { dueDate, reminderAt, ...rest } = parsed.data;
+  const { dueDate, reminderAt, url, ...rest } = parsed.data;
 
   const todo = await prisma.todoItem.create({
     data: {
       ...rest,
       dueDate: dueDate ? new Date(dueDate) : undefined,
       reminderAt: reminderAt ? new Date(reminderAt) : undefined,
+      url: url || undefined,
       workspaceId,
     },
   });
