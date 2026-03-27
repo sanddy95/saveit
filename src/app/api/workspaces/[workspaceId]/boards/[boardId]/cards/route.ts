@@ -96,6 +96,11 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         description: data.description,
         priority: data.priority || "medium",
         dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+        reminderAt: data.reminderAt ? new Date(data.reminderAt) : undefined,
+        url: data.url || undefined,
+        thumbnail: data.thumbnail || undefined,
+        siteName: data.siteName || undefined,
+        favicon: data.favicon || undefined,
         workspaceId,
       },
     });

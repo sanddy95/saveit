@@ -35,6 +35,10 @@ export interface KanbanCardData {
     completed: boolean;
     priority: string;
     dueDate: string | null;
+    url: string | null;
+    thumbnail: string | null;
+    siteName: string | null;
+    favicon: string | null;
   } | null;
   savedLink: {
     id: string;

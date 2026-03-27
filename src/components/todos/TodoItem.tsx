@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Todo } from "@/hooks/use-todos";
+import { LinkPreview } from "./LinkPreview";
 
 const priorityConfig: Record<string, { label: string; className: string }> = {
   low: { label: "Low", className: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300" },
@@ -100,6 +101,11 @@ export function TodoItem({ todo, onToggle, onEdit, onDelete }: TodoItemProps) {
             </Badge>
           )}
         </div>
+        {todo.url && (
+          <div className="mt-1">
+            <LinkPreview url={todo.url} siteName={todo.siteName} favicon={todo.favicon} compact />
+          </div>
+        )}
       </div>
 
       {/* Actions */}

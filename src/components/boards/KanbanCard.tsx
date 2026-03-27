@@ -141,6 +141,25 @@ function TodoCardContent({
           </span>
         )}
       </div>
+      {todo.url && (
+        <div className="mt-1">
+          <a
+            href={todo.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {todo.favicon ? (
+              <img src={todo.favicon} alt="" className="h-3 w-3" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+            ) : (
+              <Globe className="h-3 w-3" />
+            )}
+            <span className="truncate max-w-[120px]">{todo.siteName || "Open link"}</span>
+            <ExternalLink className="h-2.5 w-2.5" />
+          </a>
+        </div>
+      )}
     </div>
   );
 }
