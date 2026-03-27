@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckSquare, Link2 } from "lucide-react";
+import { CheckSquare, Link2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { LinkPreview } from "@/components/todos/LinkPreview";
 import { useTodos, type Todo } from "@/hooks/use-todos";
 import { useLinks, type SavedLink } from "@/hooks/use-links";
 import type { AddCardInput } from "@/lib/validators";
@@ -26,6 +27,15 @@ interface AddCardDialogProps {
   isLoading?: boolean;
 }
 
+function isUrl(str: string): boolean {
+  try {
+    const url = new URL(str);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function AddCardDialog({
   open,
   onOpenChange,
@@ -35,59 +45,103 @@ export function AddCardDialog({
   isLoading,
 }: AddCardDialogProps) {
   const [tab, setTab] = useState("existing-todo");
+  const [expanded, setExpanded] = useState(false);
 
   const { data: todos } = useTodos(workspaceId, { status: "active" });
   const { data: links } = useLinks(workspaceId);
 
+  // New todo fields
   const [todoTitle, setTodoTitle] = useState("");
-  const [todoPriority, setTodoPriority] = useState<"low" | "medium" | "high">(
-    "medium"
-  );
+  const [todoPriority, setTodoPriority] = useState<"low" | "medium" | "high">("medium");
+  const [todoDescription, setTodoDescription] = useState("");
+  const [todoDueDate, setTodoDueDate] = useState("");
+  const [todoReminderAt, setTodoReminderAt] = useState("");
+  const [fetchingMeta, setFetchingMeta] = useState(false);
+  const [linkMeta, setLinkMeta] = useState<{ url: string; thumbnail?: string; siteName?: string; favicon?: string } | null>(null);
 
+  // New link fields
   const [linkUrl, setLinkUrl] = useState("");
   const [linkTitle, setLinkTitle] = useState("");
 
-  const handleSubmit = () => {
-    if (tab === "existing-todo") return;
-    if (tab === "existing-link") return;
+  const fetchMetadata = useCallback(async (url: string) => {
+    setFetchingMeta(true);
+    try {
+      const res = await fetch("/api/metadata", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      if (!res.ok) return;
+      const meta = await res.json();
+      if (meta.title) setTodoTitle(meta.title);
+      if (meta.description) setTodoDescription(meta.description);
+      setLinkMeta({ url, thumbnail: meta.thumbnail, siteName: meta.siteName, favicon: meta.favicon });
+    } catch {
+      setLinkMeta({ url });
+    } finally {
+      setFetchingMeta(false);
+    }
+  }, []);
 
+  const handleTitleBlurOrPaste = useCallback(
+    (value: string) => {
+      if (value && isUrl(value.trim()) && !linkMeta) {
+        fetchMetadata(value.trim());
+      }
+    },
+    [fetchMetadata, linkMeta]
+  );
+
+  const resetForm = () => {
+    setTodoTitle("");
+    setTodoPriority("medium");
+    setTodoDescription("");
+    setTodoDueDate("");
+    setTodoReminderAt("");
+    setLinkMeta(null);
+    setLinkUrl("");
+    setLinkTitle("");
+    setExpanded(false);
+  };
+
+  const handleSubmit = () => {
     if (tab === "new-todo") {
       if (!todoTitle.trim()) return;
       onSubmit({
         mode: "new-todo",
         columnId,
         title: todoTitle.trim(),
+        description: todoDescription || undefined,
         priority: todoPriority,
+        dueDate: todoDueDate || undefined,
+        reminderAt: todoReminderAt || undefined,
+        url: linkMeta?.url || undefined,
+        thumbnail: linkMeta?.thumbnail || undefined,
+        siteName: linkMeta?.siteName || undefined,
+        favicon: linkMeta?.favicon || undefined,
       });
-      setTodoTitle("");
-      setTodoPriority("medium");
     } else if (tab === "new-link") {
       if (!linkUrl.trim()) return;
+      // Create as a todo with URL (unified model)
       onSubmit({
-        mode: "new-link",
+        mode: "new-todo",
         columnId,
+        title: linkTitle.trim() || linkUrl.trim(),
+        priority: "medium",
         url: linkUrl.trim(),
-        title: linkTitle.trim() || undefined,
       });
-      setLinkUrl("");
-      setLinkTitle("");
     }
-
+    resetForm();
     onOpenChange(false);
   };
 
   const handleAddExisting = (todoId?: string, savedLinkId?: string) => {
-    onSubmit({
-      mode: "existing",
-      columnId,
-      todoId,
-      savedLinkId,
-    });
+    onSubmit({ mode: "existing", columnId, todoId, savedLinkId });
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) resetForm(); }}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add Card</DialogTitle>
@@ -95,34 +149,19 @@ export function AddCardDialog({
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="existing-todo" className="text-xs">
-              Existing Todo
-            </TabsTrigger>
-            <TabsTrigger value="existing-link" className="text-xs">
-              Existing Link
-            </TabsTrigger>
-            <TabsTrigger value="new-todo" className="text-xs">
-              New Todo
-            </TabsTrigger>
-            <TabsTrigger value="new-link" className="text-xs">
-              New Link
-            </TabsTrigger>
+            <TabsTrigger value="existing-todo" className="text-xs">Existing Todo</TabsTrigger>
+            <TabsTrigger value="existing-link" className="text-xs">Existing Link</TabsTrigger>
+            <TabsTrigger value="new-todo" className="text-xs">New Todo</TabsTrigger>
+            <TabsTrigger value="new-link" className="text-xs">New Link</TabsTrigger>
           </TabsList>
 
           <TabsContent value="existing-todo" className="mt-4">
             <div className="max-h-60 overflow-y-auto space-y-1">
               {(todos || []).length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No active todos. Try the &quot;New Todo&quot; tab.
-                </p>
+                <p className="text-sm text-muted-foreground text-center py-4">No active todos. Try the &quot;New Todo&quot; tab.</p>
               ) : (
                 (todos || []).map((todo: Todo) => (
-                  <button
-                    key={todo.id}
-                    className="w-full text-left px-3 py-2 rounded-md hover:bg-accent text-sm flex items-center gap-2"
-                    onClick={() => handleAddExisting(todo.id, undefined)}
-                    disabled={isLoading}
-                  >
+                  <button key={todo.id} className="w-full text-left px-3 py-2 rounded-md hover:bg-accent text-sm flex items-center gap-2" onClick={() => handleAddExisting(todo.id, undefined)} disabled={isLoading}>
                     <CheckSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <span className="truncate">{todo.title}</span>
                   </button>
@@ -134,21 +173,12 @@ export function AddCardDialog({
           <TabsContent value="existing-link" className="mt-4">
             <div className="max-h-60 overflow-y-auto space-y-1">
               {(links || []).length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No saved links. Try the &quot;New Link&quot; tab.
-                </p>
+                <p className="text-sm text-muted-foreground text-center py-4">No saved links. Try the &quot;New Link&quot; tab.</p>
               ) : (
                 (links || []).map((link: SavedLink) => (
-                  <button
-                    key={link.id}
-                    className="w-full text-left px-3 py-2 rounded-md hover:bg-accent text-sm flex items-center gap-2"
-                    onClick={() => handleAddExisting(undefined, link.id)}
-                    disabled={isLoading}
-                  >
+                  <button key={link.id} className="w-full text-left px-3 py-2 rounded-md hover:bg-accent text-sm flex items-center gap-2" onClick={() => handleAddExisting(undefined, link.id)} disabled={isLoading}>
                     <Link2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="truncate">
-                      {link.title || link.url}
-                    </span>
+                    <span className="truncate">{link.title || link.url}</span>
                   </button>
                 ))
               )}
@@ -157,51 +187,78 @@ export function AddCardDialog({
 
           <TabsContent value="new-todo" className="mt-4 space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="todo-title">Title</Label>
-              <Input
-                id="todo-title"
-                value={todoTitle}
-                onChange={(e) => setTodoTitle(e.target.value)}
-                placeholder="What needs to be done?"
-              />
+              <Label htmlFor="card-todo-title">Title</Label>
+              <div className="relative">
+                <Input
+                  id="card-todo-title"
+                  value={todoTitle}
+                  onChange={(e) => setTodoTitle(e.target.value)}
+                  onBlur={(e) => handleTitleBlurOrPaste(e.target.value)}
+                  onPaste={(e) => { setTimeout(() => handleTitleBlurOrPaste(e.currentTarget.value), 0); }}
+                  placeholder="What needs to be done? (paste URL to auto-fetch)"
+                />
+                {fetchingMeta && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+              </div>
             </div>
+
+            {linkMeta && (
+              <LinkPreview url={linkMeta.url} thumbnail={linkMeta.thumbnail} siteName={linkMeta.siteName} favicon={linkMeta.favicon} onRemove={() => setLinkMeta(null)} />
+            )}
+
             <div className="space-y-2">
               <Label>Priority</Label>
               <div className="flex gap-2">
                 {(["low", "medium", "high"] as const).map((p) => (
-                  <Button
-                    key={p}
-                    type="button"
-                    variant={todoPriority === p ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setTodoPriority(p)}
-                  >
+                  <Button key={p} type="button" variant={todoPriority === p ? "default" : "outline"} size="sm" onClick={() => setTodoPriority(p)}>
                     {p.charAt(0).toUpperCase() + p.slice(1)}
                   </Button>
                 ))}
               </div>
             </div>
+
+            <button
+              type="button"
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              {expanded ? "Less options" : "More options"}
+            </button>
+
+            {expanded && (
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="space-y-2">
+                  <Label htmlFor="card-todo-desc">Description</Label>
+                  <textarea
+                    id="card-todo-desc"
+                    className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    placeholder="Add details..."
+                    value={todoDescription}
+                    onChange={(e) => setTodoDescription(e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="card-todo-due">Due Date</Label>
+                    <Input id="card-todo-due" type="date" value={todoDueDate} onChange={(e) => setTodoDueDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="card-todo-remind">Reminder</Label>
+                    <Input id="card-todo-remind" type="datetime-local" value={todoReminderAt} onChange={(e) => setTodoReminderAt(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="new-link" className="mt-4 space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="link-url">URL</Label>
-              <Input
-                id="link-url"
-                type="url"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="https://example.com"
-              />
+              <Label htmlFor="card-link-url">URL</Label>
+              <Input id="card-link-url" type="url" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://example.com" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="link-title">Title (optional)</Label>
-              <Input
-                id="link-title"
-                value={linkTitle}
-                onChange={(e) => setLinkTitle(e.target.value)}
-                placeholder="Custom title"
-              />
+              <Label htmlFor="card-link-title">Title (optional)</Label>
+              <Input id="card-link-title" value={linkTitle} onChange={(e) => setLinkTitle(e.target.value)} placeholder="Custom title" />
             </div>
           </TabsContent>
         </Tabs>
