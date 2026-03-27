@@ -142,6 +142,8 @@ model KanbanColumn {
   id       String @id @default(cuid())
   name     String
   position Int
+  color    String?
+  icon     String?
   boardId  String
   board KanbanBoard  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   cards KanbanCard[]
