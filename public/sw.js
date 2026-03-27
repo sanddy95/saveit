@@ -76,37 +76,79 @@ self.addEventListener("fetch", (event) => {
 
 // Handle share target
 async function handleShare(request) {
+  // Parse form data before consuming the request
+  const formData = await request.formData().catch(() => null);
+  const title = formData ? formData.get("title") || "" : "";
+  const text = formData ? formData.get("text") || "" : "";
+  const url = formData ? formData.get("url") || "" : "";
+
   try {
-    // Try to forward to server
-    const response = await fetch(request.clone());
-    return response;
+    // Forward to server silently (don't follow redirects)
+    const params = new URLSearchParams();
+    if (title) params.set("title", title);
+    if (text) params.set("text", text);
+    if (url) params.set("url", url);
+
+    const response = await fetch("/api/share", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+      redirect: "manual",
+    });
+
+    // Show success notification
+    const displayUrl = url || text || title || "Link";
+    await self.registration.showNotification("SaveIt", {
+      body: `Saved: ${displayUrl.slice(0, 100)}`,
+      icon: "/icons/icon-192.png",
+      tag: "share-saved",
+      data: { url: "/dashboard" },
+    });
   } catch (err) {
     // Offline — queue the share
-    const formData = await request.formData().catch(() => null);
-    if (formData) {
-      const shareData = {
-        title: formData.get("title") || "",
-        text: formData.get("text") || "",
-        url: formData.get("url") || "",
-        timestamp: Date.now(),
-      };
+    const shareData = { title, text, url, timestamp: Date.now() };
+    const cache = await caches.open(SHARE_QUEUE);
+    await cache.put(
+      new Request(`/share-queue/${shareData.timestamp}`),
+      new Response(JSON.stringify(shareData))
+    );
 
-      const cache = await caches.open(SHARE_QUEUE);
-      await cache.put(
-        new Request(`/share-queue/${shareData.timestamp}`),
-        new Response(JSON.stringify(shareData))
-      );
-
-      // Register for background sync
-      if (self.registration.sync) {
-        await self.registration.sync.register("share-sync");
-      }
+    if (self.registration.sync) {
+      await self.registration.sync.register("share-sync");
     }
 
-    // Redirect to dashboard with queued status
-    return Response.redirect("/dashboard?shared=queued", 303);
+    await self.registration.showNotification("SaveIt", {
+      body: "Link queued — will save when online",
+      icon: "/icons/icon-192.png",
+      tag: "share-queued",
+    });
   }
+
+  // Return a self-closing page instead of redirecting to dashboard
+  return new Response(
+    `<!DOCTYPE html><html><head><title>Saved</title></head>
+     <body><script>window.close();</script></body></html>`,
+    { headers: { "Content-Type": "text/html" } }
+  );
 }
+
+// Handle notification click — open dashboard
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || "/dashboard";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((clients) => {
+      // Focus existing window if open
+      for (const client of clients) {
+        if (client.url.includes("/dashboard") && "focus" in client) {
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      return self.clients.openWindow(targetUrl);
+    })
+  );
+});
 
 // Background sync — replay queued shares
 self.addEventListener("sync", (event) => {
