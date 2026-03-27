@@ -1,24 +1,16 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import { UpcomingTodos } from "@/components/dashboard/UpcomingTodos";
 import { RecentLinks } from "@/components/dashboard/RecentLinks";
 import { RecentBoards } from "@/components/dashboard/RecentBoards";
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
-  const name = session?.user?.name || "there";
-
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Welcome back, {name}</h1>
-        <p className="text-muted-foreground">
-          Your personal productivity hub for todos, links, and kanban boards.
-        </p>
-      </div>
+      <DashboardHero />
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         <UpcomingTodos />
         <RecentLinks />
         <RecentBoards />
