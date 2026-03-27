@@ -1,4 +1,4 @@
-const CACHE_NAME = "saveit-v1";
+const CACHE_NAME = "saveit-v2";
 const SHARE_QUEUE = "share-queue-v1";
 
 const PRECACHE_URLS = ["/dashboard", "/login"];
@@ -34,9 +34,17 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Handle share target POST when offline
+  // Handle share target POST — save silently and show notification
   if (url.pathname === "/api/share" && request.method === "POST") {
-    event.respondWith(handleShare(request));
+    event.respondWith(
+      handleShare(request).catch(() =>
+        new Response(
+          `<!DOCTYPE html><html><head><title>Saved</title></head>
+           <body><p>Saving...</p><script>window.close();</script></body></html>`,
+          { headers: { "Content-Type": "text/html" } }
+        )
+      )
+    );
     return;
   }
 
