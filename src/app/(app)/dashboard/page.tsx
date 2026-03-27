@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { UpcomingTodos } from "@/components/dashboard/UpcomingTodos";
 import { RecentLinks } from "@/components/dashboard/RecentLinks";
+import { RecentBoards } from "@/components/dashboard/RecentBoards";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -20,6 +21,7 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <UpcomingTodos />
         <RecentLinks />
+        <RecentBoards />
       </div>
     </div>
   );
