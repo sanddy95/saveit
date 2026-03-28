@@ -41,9 +41,10 @@ interface KanbanCardProps {
   card: KanbanCardData;
   index: number;
   onDelete: (cardId: string) => void;
+  onEdit?: (card: KanbanCardData) => void;
 }
 
-export function KanbanCard({ card, index, onDelete }: KanbanCardProps) {
+export function KanbanCard({ card, index, onDelete, onEdit }: KanbanCardProps) {
   return (
     <Draggable draggableId={card.id} index={index}>
       {(provided, snapshot) => (
@@ -57,7 +58,10 @@ export function KanbanCard({ card, index, onDelete }: KanbanCardProps) {
           )}
         >
           <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
+            <div
+              className="flex-1 min-w-0 cursor-pointer"
+              onClick={() => onEdit?.(card)}
+            >
               {card.todo && <TodoCardContent todo={card.todo} />}
             </div>
 

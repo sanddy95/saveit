@@ -104,6 +104,7 @@ export function useUpdateTodo(workspaceId: string) {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["todos", workspaceId] });
+      qc.invalidateQueries({ queryKey: ["board"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });

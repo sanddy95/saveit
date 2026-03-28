@@ -6,7 +6,10 @@ import { ArrowLeft, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { KanbanBoard } from "@/components/boards/KanbanBoard";
-import { useBoard, useUpdateBoard, useBoardMutations } from "@/hooks/use-boards";
+import { TodoForm } from "@/components/todos/TodoForm";
+import { useBoard, useUpdateBoard, useBoardMutations, type KanbanCardData } from "@/hooks/use-boards";
+import { useUpdateTodo, type Todo } from "@/hooks/use-todos";
+import type { TodoInput } from "@/lib/validators";
 
 export default function BoardViewPage({
   params,
@@ -19,6 +22,8 @@ export default function BoardViewPage({
   const [editName, setEditName] = useState("");
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
+  const [editFormOpen, setEditFormOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
 
   const { data: board, isLoading } = useBoard(workspaceId, boardId);
   const updateBoard = useUpdateBoard(workspaceId, boardId);
@@ -30,12 +35,41 @@ export default function BoardViewPage({
     deleteCard,
     reorder,
   } = useBoardMutations(workspaceId, boardId);
+  const updateTodo = useUpdateTodo(workspaceId);
 
   const handleRenameBoard = () => {
     if (editName.trim() && editName.trim() !== board?.name) {
       updateBoard.mutate({ name: editName.trim() });
     }
     setIsEditingName(false);
+  };
+
+  const handleEditCard = (card: KanbanCardData) => {
+    if (!card.todo) return;
+    const t = card.todo;
+    setEditingTodo({
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      completed: t.completed,
+      priority: t.priority,
+      dueDate: t.dueDate,
+      reminderAt: null,
+      url: t.url,
+      thumbnail: t.thumbnail,
+      siteName: t.siteName,
+      favicon: t.favicon,
+      workspaceId,
+      createdAt: "",
+      updatedAt: "",
+    });
+    setEditFormOpen(true);
+  };
+
+  const handleUpdateTodo = (data: TodoInput) => {
+    if (!editingTodo) return;
+    updateTodo.mutate({ id: editingTodo.id, ...data });
+    setEditingTodo(null);
   };
 
   const handleAddColumn = () => {
@@ -168,9 +202,21 @@ export default function BoardViewPage({
             deleteCard.mutate(cardId);
           }
         }}
+        onEditCard={handleEditCard}
         onReorder={(data) => reorder.mutate(data)}
         isUpdateColumnLoading={updateColumn.isPending}
         isAddCardLoading={addCard.isPending}
+      />
+
+      <TodoForm
+        open={editFormOpen}
+        onOpenChange={(open) => {
+          setEditFormOpen(open);
+          if (!open) setEditingTodo(null);
+        }}
+        todo={editingTodo}
+        onSubmit={handleUpdateTodo}
+        isLoading={updateTodo.isPending}
       />
     </div>
   );

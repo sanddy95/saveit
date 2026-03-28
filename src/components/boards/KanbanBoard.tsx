@@ -27,6 +27,7 @@ interface KanbanBoardProps {
   onDeleteColumn: (columnId: string) => void;
   onAddCard: (data: AddCardInput) => void;
   onDeleteCard: (cardId: string) => void;
+  onEditCard?: (card: KanbanCardData) => void;
   onReorder: (data: ReorderInput) => void;
   isUpdateColumnLoading?: boolean;
   isAddCardLoading?: boolean;
@@ -39,6 +40,7 @@ export function KanbanBoard({
   onDeleteColumn,
   onAddCard,
   onDeleteCard,
+  onEditCard,
   onReorder,
   isUpdateColumnLoading,
   isAddCardLoading,
@@ -186,6 +188,7 @@ export function KanbanBoard({
                 onDeleteColumn={onDeleteColumn}
                 onAddCard={onAddCard}
                 onDeleteCard={onDeleteCard}
+                onEditCard={onEditCard}
                 isUpdateLoading={isUpdateColumnLoading}
                 isAddCardLoading={isAddCardLoading}
               />
