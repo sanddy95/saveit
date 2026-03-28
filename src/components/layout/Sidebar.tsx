@@ -6,7 +6,6 @@ import { signOut, useSession } from "next-auth/react";
 import {
   LayoutDashboard,
   CheckSquare,
-  Link2,
   Kanban,
   LogOut,
   Bookmark,
@@ -43,11 +42,6 @@ export function Sidebar() {
       href: wsPrefix ? `${wsPrefix}/todos` : "/todos",
       label: "Todos",
       icon: CheckSquare,
-    },
-    {
-      href: wsPrefix ? `${wsPrefix}/links` : "/links",
-      label: "Links",
-      icon: Link2,
     },
     {
       href: wsPrefix ? `${wsPrefix}/boards` : "/boards",

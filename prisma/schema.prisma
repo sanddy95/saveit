@@ -62,7 +62,6 @@ model Workspace {
   updatedAt   DateTime @updatedAt
   members      WorkspaceMember[]
   todos        TodoItem[]
-  savedLinks   SavedLink[]
   kanbanBoards KanbanBoard[]
   sharedItems  SharedItem[]
 }
@@ -101,34 +100,14 @@ model TodoItem {
   @@index([completed])
 }
 
-model SavedLink {
-  id          String   @id @default(cuid())
-  url         String
-  title       String?
-  description String?  @db.Text
-  thumbnail   String?
-  siteName    String?
-  favicon     String?
-  workspaceId String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  kanbanCards KanbanCard[]
-  sharedItems SharedItem[]
-  @@index([workspaceId])
-}
-
 model SharedItem {
   id          String  @id @default(cuid())
   workspaceId String
   todoId      String?
-  savedLinkId String?
   createdAt   DateTime @default(now())
   workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   todo      TodoItem?  @relation(fields: [todoId], references: [id], onDelete: Cascade)
-  savedLink SavedLink? @relation(fields: [savedLinkId], references: [id], onDelete: Cascade)
   @@unique([workspaceId, todoId])
-  @@unique([workspaceId, savedLinkId])
 }
 
 model KanbanBoard {
@@ -159,12 +138,10 @@ model KanbanCard {
   position    Int
   columnId    String
   todoId      String?
-  savedLinkId String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   column    KanbanColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
   todo      TodoItem?    @relation(fields: [todoId], references: [id], onDelete: Cascade)
-  savedLink SavedLink?   @relation(fields: [savedLinkId], references: [id], onDelete: Cascade)
   @@index([columnId])
 }
 

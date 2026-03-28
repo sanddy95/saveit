@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { Plus, Link2, LayoutGrid, CalendarCheck, AlertTriangle } from "lucide-react";
+import { Plus, LayoutGrid, CalendarCheck, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CompletionRing } from "./CompletionRing";
 import { useDashboardStats } from "@/hooks/use-todos";
@@ -48,15 +48,6 @@ export function DashboardHero() {
             >
               <Plus className="h-3.5 w-3.5" />
               New Todo
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5 rounded-full"
-              onClick={() => router.push(currentWorkspaceId ? `/workspaces/${currentWorkspaceId}/links` : "/links")}
-            >
-              <Link2 className="h-3.5 w-3.5" />
-              New Link
             </Button>
             <Button
               size="sm"

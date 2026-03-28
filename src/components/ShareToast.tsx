@@ -17,14 +17,14 @@ export function ShareToast() {
     if (!shared) return;
 
     if (shared === "true") {
-      setMessage("Link saved!");
+      setMessage("Saved!");
       setVariant("success");
     } else if (shared === "queued") {
-      setMessage("Link queued — will save when online");
+      setMessage("Queued — will save when online");
       setVariant("queued");
     } else if (shared === "error") {
       const reason = searchParams.get("reason") || "unknown";
-      setMessage(reason === "no-url" ? "No URL found in shared content" : "Failed to save link");
+      setMessage(reason === "no-url" ? "No URL found in shared content" : "Failed to save");
       setVariant("error");
     }
 

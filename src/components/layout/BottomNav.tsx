@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CheckSquare, Link2, Kanban } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Kanban } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspaceContext } from "@/contexts/workspace-context";
 
@@ -20,11 +20,6 @@ export function BottomNav() {
       href: wsPrefix ? `${wsPrefix}/todos` : "/todos",
       label: "Todos",
       icon: CheckSquare,
-    },
-    {
-      href: wsPrefix ? `${wsPrefix}/links` : "/links",
-      label: "Links",
-      icon: Link2,
     },
     {
       href: wsPrefix ? `${wsPrefix}/boards` : "/boards",

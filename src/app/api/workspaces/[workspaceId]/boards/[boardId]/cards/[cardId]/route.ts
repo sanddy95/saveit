@@ -40,7 +40,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
   const updated = await prisma.kanbanCard.update({
     where: { id: cardId },
     data,
-    include: { todo: true, savedLink: true },
+    include: { todo: true },
   });
 
   return NextResponse.json(updated);

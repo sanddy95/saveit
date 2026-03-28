@@ -12,10 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckSquare, Link2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { CheckSquare, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { LinkPreview } from "@/components/todos/LinkPreview";
 import { useTodos, type Todo } from "@/hooks/use-todos";
-import { useLinks, type SavedLink } from "@/hooks/use-links";
 import type { AddCardInput } from "@/lib/validators";
 
 interface AddCardDialogProps {
@@ -48,7 +47,6 @@ export function AddCardDialog({
   const [expanded, setExpanded] = useState(false);
 
   const { data: todos } = useTodos(workspaceId, { status: "active" });
-  const { data: links } = useLinks(workspaceId);
 
   // New todo fields
   const [todoTitle, setTodoTitle] = useState("");
@@ -58,10 +56,6 @@ export function AddCardDialog({
   const [todoReminderAt, setTodoReminderAt] = useState("");
   const [fetchingMeta, setFetchingMeta] = useState(false);
   const [linkMeta, setLinkMeta] = useState<{ url: string; thumbnail?: string; siteName?: string; favicon?: string } | null>(null);
-
-  // New link fields
-  const [linkUrl, setLinkUrl] = useState("");
-  const [linkTitle, setLinkTitle] = useState("");
 
   const fetchMetadata = useCallback(async (url: string) => {
     setFetchingMeta(true);
@@ -99,8 +93,6 @@ export function AddCardDialog({
     setTodoDueDate("");
     setTodoReminderAt("");
     setLinkMeta(null);
-    setLinkUrl("");
-    setLinkTitle("");
     setExpanded(false);
   };
 
@@ -120,23 +112,13 @@ export function AddCardDialog({
         siteName: linkMeta?.siteName || undefined,
         favicon: linkMeta?.favicon || undefined,
       });
-    } else if (tab === "new-link") {
-      if (!linkUrl.trim()) return;
-      // Create as a todo with URL (unified model)
-      onSubmit({
-        mode: "new-todo",
-        columnId,
-        title: linkTitle.trim() || linkUrl.trim(),
-        priority: "medium",
-        url: linkUrl.trim(),
-      });
     }
     resetForm();
     onOpenChange(false);
   };
 
-  const handleAddExisting = (todoId?: string, savedLinkId?: string) => {
-    onSubmit({ mode: "existing", columnId, todoId, savedLinkId });
+  const handleAddExisting = (todoId: string) => {
+    onSubmit({ mode: "existing", columnId, todoId });
     onOpenChange(false);
   };
 
@@ -148,11 +130,9 @@ export function AddCardDialog({
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="existing-todo" className="text-xs">Existing Todo</TabsTrigger>
-            <TabsTrigger value="existing-link" className="text-xs">Existing Link</TabsTrigger>
             <TabsTrigger value="new-todo" className="text-xs">New Todo</TabsTrigger>
-            <TabsTrigger value="new-link" className="text-xs">New Link</TabsTrigger>
           </TabsList>
 
           <TabsContent value="existing-todo" className="mt-4">
@@ -161,24 +141,9 @@ export function AddCardDialog({
                 <p className="text-sm text-muted-foreground text-center py-4">No active todos. Try the &quot;New Todo&quot; tab.</p>
               ) : (
                 (todos || []).map((todo: Todo) => (
-                  <button key={todo.id} className="w-full text-left px-3 py-2 rounded-md hover:bg-accent text-sm flex items-center gap-2" onClick={() => handleAddExisting(todo.id, undefined)} disabled={isLoading}>
+                  <button key={todo.id} className="w-full text-left px-3 py-2 rounded-md hover:bg-accent text-sm flex items-center gap-2" onClick={() => handleAddExisting(todo.id)} disabled={isLoading}>
                     <CheckSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <span className="truncate">{todo.title}</span>
-                  </button>
-                ))
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="existing-link" className="mt-4">
-            <div className="max-h-60 overflow-y-auto space-y-1">
-              {(links || []).length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No saved links. Try the &quot;New Link&quot; tab.</p>
-              ) : (
-                (links || []).map((link: SavedLink) => (
-                  <button key={link.id} className="w-full text-left px-3 py-2 rounded-md hover:bg-accent text-sm flex items-center gap-2" onClick={() => handleAddExisting(undefined, link.id)} disabled={isLoading}>
-                    <Link2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="truncate">{link.title || link.url}</span>
                   </button>
                 ))
               )}
@@ -250,20 +215,9 @@ export function AddCardDialog({
               </div>
             )}
           </TabsContent>
-
-          <TabsContent value="new-link" className="mt-4 space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="card-link-url">URL</Label>
-              <Input id="card-link-url" type="url" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://example.com" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="card-link-title">Title (optional)</Label>
-              <Input id="card-link-title" value={linkTitle} onChange={(e) => setLinkTitle(e.target.value)} placeholder="Custom title" />
-            </div>
-          </TabsContent>
         </Tabs>
 
-        {(tab === "new-todo" || tab === "new-link") && (
+        {tab === "new-todo" && (
           <DialogFooter>
             <Button onClick={handleSubmit} disabled={isLoading}>
               {isLoading ? "Adding..." : "Add Card"}

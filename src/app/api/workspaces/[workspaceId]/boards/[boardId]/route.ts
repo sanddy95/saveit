@@ -34,7 +34,6 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
             orderBy: { position: "asc" },
             include: {
               todo: true,
-              savedLink: true,
             },
           },
         },

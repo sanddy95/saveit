@@ -25,7 +25,6 @@ export interface KanbanCardData {
   position: number;
   columnId: string;
   todoId: string | null;
-  savedLinkId: string | null;
   createdAt: string;
   updatedAt: string;
   todo: {
@@ -36,15 +35,6 @@ export interface KanbanCardData {
     priority: string;
     dueDate: string | null;
     url: string | null;
-    thumbnail: string | null;
-    siteName: string | null;
-    favicon: string | null;
-  } | null;
-  savedLink: {
-    id: string;
-    url: string;
-    title: string | null;
-    description: string | null;
     thumbnail: string | null;
     siteName: string | null;
     favicon: string | null;
@@ -225,7 +215,6 @@ export function useBoardMutations(workspaceId: string, boardId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: boardKey });
       qc.invalidateQueries({ queryKey: ["todos", workspaceId] });
-      qc.invalidateQueries({ queryKey: ["links", workspaceId] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });

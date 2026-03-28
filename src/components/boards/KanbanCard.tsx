@@ -3,7 +3,6 @@
 import { Draggable } from "@hello-pangea/dnd";
 import {
   CheckSquare,
-  Link2,
   MoreVertical,
   Trash2,
   Globe,
@@ -45,9 +44,6 @@ interface KanbanCardProps {
 }
 
 export function KanbanCard({ card, index, onDelete }: KanbanCardProps) {
-  const isTodo = !!card.todo;
-  const isLink = !!card.savedLink;
-
   return (
     <Draggable draggableId={card.id} index={index}>
       {(provided, snapshot) => (
@@ -62,12 +58,7 @@ export function KanbanCard({ card, index, onDelete }: KanbanCardProps) {
         >
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              {isTodo && card.todo && (
-                <TodoCardContent todo={card.todo} />
-              )}
-              {isLink && card.savedLink && (
-                <LinkCardContent link={card.savedLink} />
-              )}
+              {card.todo && <TodoCardContent todo={card.todo} />}
             </div>
 
             <DropdownMenu>
@@ -87,12 +78,8 @@ export function KanbanCard({ card, index, onDelete }: KanbanCardProps) {
           </div>
 
           <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-            {isTodo ? (
-              <CheckSquare className="h-3 w-3" />
-            ) : (
-              <Link2 className="h-3 w-3" />
-            )}
-            <span>{isTodo ? "Todo" : "Link"}</span>
+            <CheckSquare className="h-3 w-3" />
+            <span>Todo</span>
           </div>
         </div>
       )}
@@ -160,49 +147,6 @@ function TodoCardContent({
           </a>
         </div>
       )}
-    </div>
-  );
-}
-
-function LinkCardContent({
-  link,
-}: {
-  link: NonNullable<KanbanCardData["savedLink"]>;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-start gap-2">
-        {link.favicon ? (
-          <img
-            src={link.favicon}
-            alt=""
-            className="h-4 w-4 mt-0.5 shrink-0"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-        ) : (
-          <Globe className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
-        )}
-        <p className="text-sm font-medium leading-tight line-clamp-2">
-          {link.title || link.url}
-        </p>
-      </div>
-      {link.siteName && (
-        <p className="text-[10px] text-muted-foreground truncate">
-          {link.siteName}
-        </p>
-      )}
-      <button
-        className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline"
-        onClick={(e) => {
-          e.stopPropagation();
-          window.open(link.url, "_blank", "noopener,noreferrer");
-        }}
-      >
-        <ExternalLink className="h-3 w-3" />
-        Open
-      </button>
     </div>
   );
 }

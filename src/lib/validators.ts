@@ -36,17 +36,10 @@ export const todoSchema = z.object({
   favicon: z.string().optional(),
 });
 
-export const savedLinkSchema = z.object({
-  url: z.string().url("Invalid URL"),
-  title: z.string().optional(),
-  description: z.string().optional(),
-});
-
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type WorkspaceInput = z.infer<typeof workspaceSchema>;
 export type TodoInput = z.infer<typeof todoSchema>;
-export type SavedLinkInput = z.infer<typeof savedLinkSchema>;
 
 export const boardSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -66,8 +59,7 @@ export const addCardSchema = z.discriminatedUnion("mode", [
   z.object({
     mode: z.literal("existing"),
     columnId: z.string().min(1),
-    todoId: z.string().optional(),
-    savedLinkId: z.string().optional(),
+    todoId: z.string().min(1),
   }),
   z.object({
     mode: z.literal("new-todo"),
@@ -81,13 +73,6 @@ export const addCardSchema = z.discriminatedUnion("mode", [
     thumbnail: z.string().optional(),
     siteName: z.string().optional(),
     favicon: z.string().optional(),
-  }),
-  z.object({
-    mode: z.literal("new-link"),
-    columnId: z.string().min(1),
-    url: z.string().url("Invalid URL"),
-    title: z.string().optional(),
-    description: z.string().optional(),
   }),
 ]);
 

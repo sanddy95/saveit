@@ -1,7 +1,7 @@
 {
   "name": "SaveIt",
   "short_name": "SaveIt",
-  "description": "Your personal productivity hub — todos, links, and boards",
+  "description": "Your personal productivity hub — todos and boards",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",

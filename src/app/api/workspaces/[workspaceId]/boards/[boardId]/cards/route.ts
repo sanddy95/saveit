@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { addCardSchema } from "@/lib/validators";
-import { fetchUrlMetadata } from "@/lib/metadata";
 
 type RouteContext = {
   params: Promise<{ workspaceId: string; boardId: string }>;
@@ -63,24 +62,15 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
   }
 
   let todoId: string | undefined;
-  let savedLinkId: string | undefined;
 
   if (data.mode === "existing") {
     todoId = data.todoId;
-    savedLinkId = data.savedLinkId;
-
-    if (!todoId && !savedLinkId) {
-      return NextResponse.json(
-        { error: "Must provide todoId or savedLinkId" },
-        { status: 400 }
-      );
-    }
 
     // Check duplicate on this board
     const existingCard = await prisma.kanbanCard.findFirst({
       where: {
         column: { boardId },
-        ...(todoId ? { todoId } : { savedLinkId }),
+        todoId,
       },
     });
     if (existingCard) {
@@ -105,26 +95,6 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       },
     });
     todoId = todo.id;
-  } else if (data.mode === "new-link") {
-    let metadata = { title: "", description: "", thumbnail: "", siteName: "", favicon: "" };
-    try {
-      metadata = await fetchUrlMetadata(data.url);
-    } catch {
-      // Continue without metadata
-    }
-
-    const link = await prisma.savedLink.create({
-      data: {
-        url: data.url,
-        title: data.title || metadata.title || null,
-        description: data.description || metadata.description || null,
-        thumbnail: metadata.thumbnail || null,
-        siteName: metadata.siteName || null,
-        favicon: metadata.favicon || null,
-        workspaceId,
-      },
-    });
-    savedLinkId = link.id;
   }
 
   const card = await prisma.kanbanCard.create({
@@ -132,11 +102,9 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       position: cardCount,
       columnId: data.columnId,
       todoId,
-      savedLinkId,
     },
     include: {
       todo: true,
-      savedLink: true,
     },
   });
 
