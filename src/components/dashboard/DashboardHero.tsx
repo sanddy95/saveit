@@ -34,7 +34,7 @@ export function DashboardHero() {
         {/* Left side — greeting + actions */}
         <div className="space-y-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight font-[family-name:var(--font-space-grotesk)]">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-[-0.03em] font-heading">
               {getGreeting()}, {name}
             </h1>
             <p className="text-muted-foreground mt-1">{today}</p>
@@ -71,7 +71,7 @@ export function DashboardHero() {
             <div className="flex items-center gap-2 rounded-lg border bg-card/80 px-3 py-2">
               <CalendarCheck className="h-4 w-4 text-primary" />
               <div>
-                <p className="text-lg font-bold font-[family-name:var(--font-space-grotesk)] leading-none">
+                <p className="text-lg font-bold font-heading leading-none">
                   {stats?.dueToday || 0}
                 </p>
                 <p className="text-[10px] text-muted-foreground">Due Today</p>
@@ -80,7 +80,7 @@ export function DashboardHero() {
             <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${(stats?.overdue || 0) > 0 ? "border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/30" : "bg-card/80"}`}>
               <AlertTriangle className={`h-4 w-4 ${(stats?.overdue || 0) > 0 ? "text-red-500" : "text-muted-foreground"}`} />
               <div>
-                <p className={`text-lg font-bold font-[family-name:var(--font-space-grotesk)] leading-none ${(stats?.overdue || 0) > 0 ? "text-red-600 dark:text-red-400" : ""}`}>
+                <p className={`text-lg font-bold font-heading leading-none ${(stats?.overdue || 0) > 0 ? "text-destructive" : ""}`}>
                   {stats?.overdue || 0}
                 </p>
                 <p className="text-[10px] text-muted-foreground">Overdue</p>

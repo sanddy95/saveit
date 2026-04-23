@@ -52,11 +52,11 @@ export function Sidebar() {
   ];
 
   return (
-    <div className="flex h-full w-64 flex-col border-r bg-card">
+    <div className="flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar">
       {/* Logo */}
       <div className="flex items-center gap-2 p-4">
         <Bookmark className="h-6 w-6 text-primary" />
-        <span className="text-xl font-bold">SaveIt</span>
+        <span className="font-heading text-xl font-bold tracking-[-0.03em]">SaveIt</span>
       </div>
 
       <Separator />

@@ -11,7 +11,7 @@ export function RecentBoards() {
   return (
     <div className="rounded-xl border bg-card overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: "200ms" }}>
       <div className="p-5">
-        <h2 className="text-base font-semibold flex items-center gap-2 font-[family-name:var(--font-space-grotesk)]">
+        <h2 className="text-base font-semibold flex items-center gap-2 font-heading tracking-[-0.03em]">
           <LayoutGrid className="h-4 w-4 text-primary" />
           Recent Boards
         </h2>

@@ -45,7 +45,7 @@ export function CompletionRing({ completed, total, size = 80 }: CompletionRingPr
         </defs>
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-lg font-bold font-[family-name:var(--font-space-grotesk)]">
+        <span className="text-lg font-bold font-heading">
           {percentage}%
         </span>
       </div>

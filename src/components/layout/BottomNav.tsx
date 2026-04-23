@@ -29,7 +29,7 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/80 backdrop-blur-xl">
       <div className="flex h-16 items-center justify-around">
         {navItems.map((item) => {
           const isActive =
@@ -46,7 +46,7 @@ export function BottomNav() {
               )}
             >
               <item.icon
-                className={cn("h-5 w-5", isActive && "fill-primary/20")}
+                className={cn("h-5 w-5", isActive && "fill-primary/15")}
               />
               <span>{item.label}</span>
             </Link>

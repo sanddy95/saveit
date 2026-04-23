@@ -28,7 +28,7 @@ export function UpcomingTodos() {
       </div>
 
       <div className="p-5">
-        <h2 className="text-base font-semibold flex items-center gap-2 font-[family-name:var(--font-space-grotesk)]">
+        <h2 className="text-base font-semibold flex items-center gap-2 font-heading tracking-[-0.03em]">
           <CalendarClock className="h-4 w-4 text-primary" />
           Upcoming Todos
         </h2>
